@@ -114,6 +114,8 @@ static lib_thread lib_spawn(void (*func)(void*), size_t stack_size, char *name, 
 				lib_running_threads[lib_running_threads_cnt++] = thd;
 			}
 
+			commands_printf_lisp("Spawned package thread 0x%08x", thd);
+
 			return (lib_thread)thd;
 		}
 	}
@@ -123,6 +125,8 @@ static lib_thread lib_spawn(void (*func)(void*), size_t stack_size, char *name, 
 
 static void lib_request_terminate(lib_thread thd) {
 	chThdTerminate((thread_t*)thd);
+	thread_t* t = thd;
+	commands_printf_lisp("Terminate reqested on thread address 0x%08x, should terminate flag: %u", t, t->p_flags & CH_FLAG_TERMINATE);
 
 	int timeout = 2000;
 	while (!chThdTerminatedX((thread_t*)thd)) {
@@ -131,17 +135,22 @@ static void lib_request_terminate(lib_thread thd) {
 
 		// Not terminating, reset using wdt to not start lbm after reboot.
 		if (timeout == 0) {
-			commands_printf_lisp("Not terminating, crashing...");
+			commands_printf_lisp("Thread terminate timed out, rebooting via watchdog timer...");
 			chThdSleepMilliseconds(20);
 			chSysLock();
 			for (;;) {__NOP();}
 		}
 	}
 
+	commands_printf_lisp("Thread successfully terminated.");
 }
 
 static bool lib_should_terminate(void) {
-	return chThdShouldTerminateX();
+	bool st = chThdShouldTerminateX();
+	if (st) {
+		commands_printf_lisp("Thread polled for terminate flag and it should terminate.");
+	}
+	return st;
 }
 
 static void** lib_get_arg(uint32_t prog_addr) {
@@ -915,6 +924,8 @@ lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 				return res;
 			}
 
+			commands_printf_lisp("Loaded Lisp library at 0x%08x", loaded_libs[i].base_addr);
+
 			break;
 		}
 	}
@@ -962,7 +973,9 @@ lbm_value ext_unload_native_lib(lbm_value *args, lbm_uint argn) {
 void lispif_stop_lib(void) {
 	for (int i = 0;i < LIB_NUM_MAX;i++) {
 		if (loaded_libs[i].stop_fun != NULL) {
+			commands_printf_lisp("Calling stop on package at 0x%08x", loaded_libs[i].base_addr);
 			loaded_libs[i].stop_fun(loaded_libs[i].arg);
+			commands_printf_lisp("Stop on package at 0x%08x called", loaded_libs[i].base_addr);
 			loaded_libs[i].stop_fun = NULL;
 		}
 	}
