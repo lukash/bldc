@@ -304,42 +304,51 @@ static THD_FUNCTION(lsm6ds3_thread, arg) {
 	(void)arg;
 	chRegSetThreadName("LSM6DS3");
 
-	systime_t iteration_timer = chVTGetSystemTimeX();
-	const systime_t desired_interval = US2ST(1000000 / rate_hz);
+	const systime_t interval = US2ST(1000000 / rate_hz);
 
 	while (!chThdShouldTerminateX()) {
+		systime_t start_time = chVTGetSystemTimeX();
+
 		uint8_t txb[2];
 		uint8_t rxb[12];
 
-		// Read IMU output registers
-		txb[0] = LSM6DS3_ACC_GYRO_OUTX_L_G;
-		bool res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 1, rxb, 12);
+		txb[0] = LSM6DS3_ACC_GYRO_STATUS_REG;
+		bool res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 1, rxb, 1);
 
-		// Parse 6 axis values
-		float gx = (float)((int16_t)((uint16_t)rxb[1] << 8) + rxb[0]) * 4.375 * (2000 / 125) / 1000;
-		float gy = (float)((int16_t)((uint16_t)rxb[3] << 8) + rxb[2]) * 4.375 * (2000 / 125) / 1000;
-		float gz = (float)((int16_t)((uint16_t)rxb[5] << 8) + rxb[4]) * 4.375 * (2000 / 125) / 1000;
-		float ax = (float)((int16_t)((uint16_t)rxb[7] << 8) + rxb[6]) * 0.061 * (16 >> 1) / 1000;
-		float ay = (float)((int16_t)((uint16_t)rxb[9] << 8) + rxb[8]) * 0.061 * (16 >> 1) / 1000;
-		float az = (float)((int16_t)((uint16_t)rxb[11] << 8) + rxb[10]) * 0.061 * (16 >> 1) / 1000;
+		systime_t sleep_ticks = 1;
+		// Bits 0 and 1 indicate a new sample for accelerometer and gyro respectively
+		if (res && (rxb[0] & 3) > 0) {
+			// Read IMU output registers
+			txb[0] = LSM6DS3_ACC_GYRO_OUTX_L_G;
+			res = i2c_bb_tx_rx(m_i2c_bb, lsm6ds3_addr, txb, 1, rxb, 12);
 
-		if (res && read_callback) {
-			float tmp_accel[3] = {ax,ay,az}, tmp_gyro[3] = {gx,gy,gz}, tmp_mag[3] = {1,2,3};
-			read_callback(tmp_accel, tmp_gyro, tmp_mag);
+			// Parse 6 axis values
+			float gx = (float)((int16_t)((uint16_t)rxb[1] << 8) + rxb[0]) * 4.375 * (2000 / 125) / 1000;
+			float gy = (float)((int16_t)((uint16_t)rxb[3] << 8) + rxb[2]) * 4.375 * (2000 / 125) / 1000;
+			float gz = (float)((int16_t)((uint16_t)rxb[5] << 8) + rxb[4]) * 4.375 * (2000 / 125) / 1000;
+			float ax = (float)((int16_t)((uint16_t)rxb[7] << 8) + rxb[6]) * 0.061 * (16 >> 1) / 1000;
+			float ay = (float)((int16_t)((uint16_t)rxb[9] << 8) + rxb[8]) * 0.061 * (16 >> 1) / 1000;
+			float az = (float)((int16_t)((uint16_t)rxb[11] << 8) + rxb[10]) * 0.061 * (16 >> 1) / 1000;
+
+			if (res && read_callback) {
+				float tmp_accel[3] = {ax,ay,az}, tmp_gyro[3] = {gx,gy,gz}, tmp_mag[3] = {1,2,3};
+				read_callback(tmp_accel, tmp_gyro, tmp_mag);
+			}
+
+			// Timing strategy:
+			// We have detected a sample somewhere around start_time. We want
+			// to try to make sure we don't sleep too long and hit the next
+			// sample just as it appears on the IMU, so we sleep for 2 ticks
+			// less than the theoretical arrival of the next sample. If we're
+			// too early, we only sleep for 1 tick each iteration so that we
+			// pick the sample as fast as possible.
+			systime_t remaining_sleep_time = start_time + interval - chVTGetSystemTimeX() - 2;
+
+			if (remaining_sleep_time > 0 && remaining_sleep_time < interval) {
+				sleep_ticks = remaining_sleep_time;
+			}
 		}
 
-		// Delay between loops
-		iteration_timer += desired_interval;
-		systime_t current_time = chVTGetSystemTimeX();
-		systime_t remainin_sleep_time = iteration_timer - current_time;
-		if (remainin_sleep_time > 0 && remainin_sleep_time < desired_interval) {
-			// Sleep the remaining time.
-			chThdSleep(remainin_sleep_time);
-		} else {
-			// Read was too slow or CPU was too buzy, reset the schedule.
-			iteration_timer = current_time;
-			chThdSleep(desired_interval);
-		}
+		chThdSleep(sleep_ticks);
 	}
 }
-
