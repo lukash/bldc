@@ -41,7 +41,24 @@ static void(*read_callback)(float *accel, float *gyro, float *mag) = 0;
 
 
 void lsm6ds3_set_rate_hz(int hz) {
-	rate_hz = hz;
+	if (hz <= 13) {
+		rate_hz = 13;
+	} else if (hz <= 26) {
+		rate_hz = 26;
+	} else if (hz <= 52) {
+		rate_hz = 52;
+	} else if (hz <= 104) {
+		rate_hz = 104;
+	} else if (hz <= 208) {
+		rate_hz = 208;
+	} else if (hz <= 416) {
+		rate_hz = 416;
+	} else if (hz <= 833) {
+		rate_hz = 833;
+	} else {
+		// Don't allow more than 1660Hz, we can't handle it anyway
+		rate_hz = 1660;
+	}
 }
 
 void lsm6ds3_set_filter(IMU_FILTER f) {
