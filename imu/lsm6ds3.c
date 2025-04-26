@@ -261,7 +261,7 @@ void lsm6ds3_init(i2c_bb_state *i2c_state,
 			"[reg]",
 			terminal_read_reg);
 
-	lsm6ds3_thread_ref = chThdCreateStatic(work_area, work_area_size, NORMALPRIO + 1, lsm6ds3_thread, NULL);
+	lsm6ds3_thread_ref = chThdCreateStatic(work_area, work_area_size, NORMALPRIO, lsm6ds3_thread, NULL);
 }
 
 void lsm6ds3_stop(void) {
