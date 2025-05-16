@@ -364,4 +364,9 @@ int main(void) {
 	}
 }
 
+void HardFault_Handler(void) {
+	__BKPT(0);
+	while (true) {}
+}
+
 #pragma GCC pop_options
