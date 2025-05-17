@@ -660,6 +660,7 @@ typedef struct {
 	// Debug Info
 	void (*get_reset_flags)(uint8_t *reset_flags);
 	void (*get_crash_registers)(uint32_t **crash_registers);
+	void (*get_icod_counter)(uint8_t *icod_counter);
 } vesc_c_if;
 
 typedef struct {

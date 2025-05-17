@@ -703,6 +703,11 @@ static void get_crash_registers(uint32_t **crash_registers) {
 	*crash_registers = crash_info;
 }
 
+extern uint8_t integrity_check_of_death_counter;
+static void get_icod_counter(uint8_t *icod_counter) {
+	*icod_counter = integrity_check_of_death_counter;
+}
+
 lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 	lbm_value res = lbm_enc_sym(SYM_EERROR);
 
@@ -1041,6 +1046,7 @@ lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 
 		cif.cif.get_reset_flags = get_reset_flags;
 		cif.cif.get_crash_registers = get_crash_registers;
+		cif.cif.get_icod_counter = get_icod_counter;
 
 		lib_init_done = true;
 

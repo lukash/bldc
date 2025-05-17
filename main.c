@@ -94,6 +94,7 @@ static THD_WORKING_AREA(led_thread_wa, 256);
 static THD_WORKING_AREA(flash_integrity_check_thread_wa, 256);
 static volatile bool m_init_done = false;
 
+uint8_t integrity_check_of_death_counter = 0;
 static THD_FUNCTION(flash_integrity_check_thread, arg) {
 	(void)arg;
 
@@ -102,7 +103,8 @@ static THD_FUNCTION(flash_integrity_check_thread, arg) {
 
 	for(;;) {
 		if (flash_helper_verify_flash_memory_chunk() == FAULT_CODE_FLASH_CORRUPTION) {
-			NVIC_SystemReset();
+			integrity_check_of_death_counter++;
+			//NVIC_SystemReset();
 		}
 
 		chThdSleepMilliseconds(6);
