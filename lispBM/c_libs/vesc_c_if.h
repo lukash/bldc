@@ -656,6 +656,9 @@ typedef struct {
 	void (*sem_signal)(lib_semaphore);
 	bool (*sem_wait_to)(lib_semaphore, systime_t); // Returns false on timeout
 	void (*sem_reset)(lib_semaphore);
+
+	// Debug Info
+	void (*get_reset_flags)(uint8_t *reset_flags);
 } vesc_c_if;
 
 typedef struct {

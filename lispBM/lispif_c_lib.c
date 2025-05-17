@@ -693,6 +693,11 @@ static int lib_lbm_set_error_reason(char *str) {
 	return 1;
 }
 
+extern uint8_t rcc_csr;
+static void get_reset_flags(uint8_t *reset_flags) {
+	*reset_flags = rcc_csr;
+}
+
 lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 	lbm_value res = lbm_enc_sym(SYM_EERROR);
 
@@ -1028,6 +1033,8 @@ lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 		cif.cif.sem_signal = lib_sem_signal;
 		cif.cif.sem_wait_to = lib_sem_wait_to;
 		cif.cif.sem_reset = lib_sem_reset;
+
+		cif.cif.get_reset_flags = get_reset_flags;
 
 		lib_init_done = true;
 

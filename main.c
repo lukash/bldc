@@ -247,7 +247,11 @@ uint32_t main_calc_hw_crc(void) {
 	return crc;
 }
 
+uint8_t rcc_csr;
+
 int main(void) {
+	rcc_csr = (RCC->CSR & 0xFF000000) >> 24;
+
 	halInit();
 	chSysInit();
 
