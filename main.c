@@ -368,7 +368,40 @@ int main(void) {
 	}
 }
 
+void HardFault_Handler(void) __attribute__((naked));
 void HardFault_Handler(void) {
+	__asm volatile (
+		"TST LR, #4\n"
+		"ITE EQ\n"
+		"MRSEQ R0, MSP\n"
+		"MRSNE R0, PSP\n"
+		"B hard_fault_handler_c\n"
+    );
+}
+
+__attribute__((section(".noinit"))) uint32_t crash_info[14];
+void hard_fault_handler_c(uint32_t *hardfault_args) {
+	// uint32_t r0 = hardfault_args[0];
+	// uint32_t r1 = hardfault_args[1];
+	// uint32_t r2 = hardfault_args[2];
+	// uint32_t r3 = hardfault_args[3];
+	// uint32_t r12 = hardfault_args[4];
+	// uint32_t lr = hardfault_args[5];
+	// uint32_t pc = hardfault_args[6];
+	// uint32_t psr = hardfault_args[7];
+
+	uint8_t i = 0;
+	for ( ; i < 8; ++i) {
+		crash_info[i] = hardfault_args[i];
+	}
+
+	crash_info[i++] = *(uint32_t*)0xE000ED38; // BFAR
+	crash_info[i++] = *(uint32_t*)0xE000ED28; // CFSR
+	crash_info[i++] = *(uint32_t*)0xE000ED2C; // HFSR
+	crash_info[i++] = *(uint32_t*)0xE000ED30; // DFSR
+	crash_info[i++] = *(uint32_t*)0xE000ED3C; // AFSR
+	crash_info[i++] = SCB->SHCSR;
+
 	__BKPT(0);
 	while (true) {}
 }

@@ -698,6 +698,11 @@ static void get_reset_flags(uint8_t *reset_flags) {
 	*reset_flags = rcc_csr;
 }
 
+extern uint32_t crash_info[14];
+static void get_crash_registers(uint32_t **crash_registers) {
+	*crash_registers = crash_info;
+}
+
 lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 	lbm_value res = lbm_enc_sym(SYM_EERROR);
 
@@ -1035,6 +1040,7 @@ lbm_value ext_load_native_lib(lbm_value *args, lbm_uint argn) {
 		cif.cif.sem_reset = lib_sem_reset;
 
 		cif.cif.get_reset_flags = get_reset_flags;
+		cif.cif.get_crash_registers = get_crash_registers;
 
 		lib_init_done = true;
 
