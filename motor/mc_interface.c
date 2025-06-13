@@ -2334,6 +2334,10 @@ static void update_override_limits(volatile motor_if_state_t *motor, volatile mc
 	// Temperature MOSFET
 	float lo_min_mos = l_current_min_tmp;
 	float lo_max_mos = l_current_max_tmp;
+
+	// FET CUTOFF: Beware indentation, it was preserved in if body for easy audit
+	if (conf->l_temp_fet_end < 100.0f) {
+
 	if (motor->m_temp_fet < (conf->l_temp_fet_start + 0.1)) {
 		// Keep values
 	} else if (motor->m_temp_fet > (conf->l_temp_fet_end - 0.1)) {
@@ -2357,9 +2361,15 @@ static void update_override_limits(volatile motor_if_state_t *motor, volatile mc
 		}
 	}
 
+	} // FET CUTOFF end
+
 	// Temperature MOTOR
 	float lo_min_mot = l_current_min_tmp;
 	float lo_max_mot = l_current_max_tmp;
+
+	// MOTOR CUTOFF: Beware indentation, it was preserved in if body for easy audit
+	if (conf->l_temp_motor_end < 100.0f) {
+
 	if (motor->m_temp_motor < (conf->l_temp_motor_start + 0.1)) {
 		// Keep values
 	} else if (motor->m_temp_motor > (conf->l_temp_motor_end - 0.1)) {
@@ -2382,6 +2392,8 @@ static void update_override_limits(volatile motor_if_state_t *motor, volatile mc
 			lo_max_mot = SIGN(l_current_max_tmp) * maxc;
 		}
 	}
+
+	} // MOTOR CUTOFF end
 
 	// Decreased temperatures during acceleration
 	// in order to still have braking torque available
