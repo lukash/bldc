@@ -45,7 +45,9 @@ static void recover(transport_t *t) {
 // The 700 kHz bus allows a higher sample rate than 400 kHz. The lower bus
 // speeds were never tested, they'll most likely require a lower limit.
 static uint16_t max_sample_rate(transport_t *t) {
-	return t->bus.i2c_bb.rate >= I2C_BB_RATE_700K ? 1200 : 900;
+	//return t->bus.i2c_bb.rate >= I2C_BB_RATE_700K ? 1200 : 900;
+	(void)t;
+	return 10000;
 }
 
 static const transport_interface_t i2c_bb_interface = {
