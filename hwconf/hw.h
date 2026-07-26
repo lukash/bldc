@@ -43,7 +43,7 @@
 #error "No hardware name set"
 #endif
 
-#define FW_NAME "rflt-xtras-0.1"
+#define FW_NAME "rflt-xtras-0.2"
 
 #ifndef FW_NAME
 #ifdef DISABLE_HW_LIMITS
