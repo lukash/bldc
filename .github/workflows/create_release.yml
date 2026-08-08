@@ -45,7 +45,7 @@ jobs:
       - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
         uses: carlosperate/arm-none-eabi-gcc-action@v1
         with:
-          release: '10.3-2021.10'
+          release: '14.3.Rel1'
 
       - name: Build
         run: make -j32 ${{env.CONTROLLERS}}
