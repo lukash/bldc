@@ -186,7 +186,29 @@
     #define IMU_I2C_SDA_PIN			4
     #define IMU_I2C_SCL_GPIO			GPIOB
     #define IMU_I2C_SCL_PIN			5
-    
+
+    // External IMU on the HW_SPI pins (SPID3, PC10/11/12), NSS on PB10, DRDY on PB11.
+    // Pin overlaps, in effect only while an external IMU is selected: PC10/PC11 are the
+    // COMM-port UART, which is not started while an external IMU is configured; PB10/PB11
+    // are the permanent UART - the IMU works even with it enabled (EXTI senses the pin in
+    // UART AF mode), but it reads DRDY edges as garbage, so disable it in the app settings.
+    // An NRF52 module must not be populated - its TX would drive PB11 against the DRDY.
+    #define IMU_EXT_COM			IMU_COM_SPI_HW
+    #define IMU_EXT_SPI_DEV			SPID3
+    #define IMU_EXT_SPI_AF			GPIO_AF_SPI3
+    #define IMU_EXT_SPI_NSS_GPIO		GPIOB
+    #define IMU_EXT_SPI_NSS_PIN		10
+    #define IMU_EXT_SPI_SCK_GPIO		GPIOC
+    #define IMU_EXT_SPI_SCK_PIN		10
+    #define IMU_EXT_SPI_MISO_GPIO		GPIOC
+    #define IMU_EXT_SPI_MISO_PIN		11
+    #define IMU_EXT_SPI_MOSI_GPIO		GPIOC
+    #define IMU_EXT_SPI_MOSI_PIN		12
+    #define IMU_EXT_BUS_SPEED_HZ		10500000
+
+    #define IMU_EXT_DRDY_GPIO		GPIOB
+    #define IMU_EXT_DRDY_PIN		11
+
     //BRK
     #define BRK_GPIO				GPIOB
     #define BRK_PIN					12
