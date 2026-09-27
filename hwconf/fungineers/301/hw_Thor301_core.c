@@ -146,12 +146,6 @@ void hw_init_gpio(void) {
 	palSetPadMode(GPIOC, 3, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOC, 4, PAL_MODE_INPUT_ANALOG);
 	palSetPadMode(GPIOC, 5, PAL_MODE_INPUT_ANALOG);
-
-	//Start the buzzer and beep it
-	pwm_servo_init((uint32_t)4000, (float)0.5f);
-	HW_BUZZER_ON();
-	chThdSleepMilliseconds(100);
-	HW_BUZZER_OFF();
 }
 
 void hw_setup_adc_channels(void) {
