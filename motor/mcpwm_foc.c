@@ -3330,10 +3330,10 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 			utils_truncate_number_abs(&iq_set_tmp, -conf_now->lo_current_min);
 		}
 
-		UTILS_LP_FAST(motor_now->m_duty_abs_filtered, duty_abs, 0.01);
+		ema_step(&motor_now->m_duty_abs_filtered, duty_abs, motor_now->p_alpha_duty);
 		utils_truncate_number_abs((float*)&motor_now->m_duty_abs_filtered, 1.0);
 
-		UTILS_LP_FAST(motor_now->m_duty_filtered, duty_now, 0.01);
+		ema_step(&motor_now->m_duty_filtered, duty_now, motor_now->p_alpha_duty);
 		utils_truncate_number_abs((float*)&motor_now->m_duty_filtered, 1.0);
 
 		float duty_set = motor_now->m_duty_cycle_set;
