@@ -189,6 +189,7 @@ static THD_FUNCTION(thread_func, arg) {
 	const systime_t interval = period - 1;
 
 	uint32_t last_ts = timer_time_now();
+	bool first_sample = true;
 
 	while (!chThdShouldTerminateX()) {
 		systime_t start_time = chVTGetSystemTimeX();
@@ -235,8 +236,10 @@ static THD_FUNCTION(thread_func, arg) {
 		}
 
 		if (m_cb && !frozen) {
-			m_cb(accel, gyro, mag, timer_calc_diff(last_ts, ts));
+			float dt = first_sample ? 1.0f / m_dev->sample_rate_hz : timer_calc_diff(last_ts, ts);
+			m_cb(accel, gyro, mag, dt);
 		}
+		first_sample = false;
 		last_ts = ts;
 
 		// In DRDY mode the next edge wakes the loop, we only sleep in timed mode
