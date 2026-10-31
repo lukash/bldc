@@ -18,9 +18,13 @@
  */
 
 #include "foc_math.h"
+#include "ema.h"
 #include "utils_math.h"
 #include "hw.h"
 #include <math.h>
+
+// Cutoff frequencies of the filters in the control loop
+#define VDQ_CUTOFF_HZ				500.0
 
 // See http://cas.ensmp.fr/~praly/Telechargement/Journaux/2010-IEEE_TPEL-Lee-Hong-Nam-Ortega-Praly-Astolfi.pdf
 void foc_observer_update(float v_alpha, float v_beta, float i_alpha, float i_beta,
@@ -796,4 +800,6 @@ void foc_precalc_values(motor_all_state_t *motor) {
 	motor->p_fs = conf_now->foc_f_zv * 0.5;
 #endif
 	motor->p_dt = 1.0 / motor->p_fs;
+
+	motor->p_alpha_vdq = ema_alpha(VDQ_CUTOFF_HZ, motor->p_dt);
 }
