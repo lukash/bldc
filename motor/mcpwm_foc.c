@@ -3252,7 +3252,7 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 	float ib = curr1;
 	float ic = curr2;
 
-	UTILS_LP_FAST(state_now->v_bus, GET_INPUT_VOLTAGE(), 0.1);
+	ema_step(&state_now->v_bus, GET_INPUT_VOLTAGE(), motor_now->p_alpha_v_bus);
 
 	volatile float enc_ang = 0;
 	volatile bool encoder_is_being_used = false;
@@ -3811,7 +3811,7 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		state_now->mod_d = state_now->vd * voltage_normalize;
 		state_now->mod_q = state_now->vq * voltage_normalize;
 		UTILS_NAN_ZERO(state_now->mod_q_filter);
-		UTILS_LP_FAST(state_now->mod_q_filter, state_now->mod_q, 0.2);
+		ema_step(&state_now->mod_q_filter, state_now->mod_q, motor_now->p_alpha_mod_q);
 		utils_truncate_number_abs((float*)&state_now->mod_q_filter, 1.0);
 	}
 
@@ -4705,7 +4705,7 @@ static void control_current(motor_all_state_t *motor, float dt) {
 	state_m->mod_d = state_m->vd * voltage_normalize;
 	state_m->mod_q = state_m->vq * voltage_normalize;
 	UTILS_NAN_ZERO(state_m->mod_q_filter);
-	UTILS_LP_FAST(state_m->mod_q_filter, state_m->mod_q, 0.2);
+	state_m->mod_q_filter = ema_next(state_m->mod_q_filter, state_m->mod_q, motor->p_alpha_mod_q);
 
 	// TODO: Have a look at this?
 #ifdef HW_HAS_INPUT_CURRENT_SENSOR
