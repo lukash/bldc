@@ -3840,16 +3840,16 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		float diff = utils_angle_difference_rad(phase_for_speed_est, motor_now->m_phase_before_speed_est);
 		utils_truncate_number(&diff, -M_PI / 3.0, M_PI / 3.0);
 
-		UTILS_LP_FAST(motor_now->m_speed_est_fast, diff * fs, 0.01);
+		ema_step(&motor_now->m_speed_est_fast, diff * fs, motor_now->p_alpha_speed_fast);
 		UTILS_NAN_ZERO(motor_now->m_speed_est_fast);
 
-		UTILS_LP_FAST(motor_now->m_speed_est_faster, diff * fs, 0.2);
+		ema_step(&motor_now->m_speed_est_faster, diff * fs, motor_now->p_alpha_speed_faster);
 		UTILS_NAN_ZERO(motor_now->m_speed_est_faster);
 
 		float diff_corr = utils_angle_difference_rad(state_now->phase, motor_now->m_phase_before_speed_est_corrected);
 		utils_truncate_number(&diff_corr, -M_PI / 3.0, M_PI / 3.0);
 
-		UTILS_LP_FAST(motor_now->m_speed_est_fast_corrected, diff_corr * fs, 0.01);
+		ema_step(&motor_now->m_speed_est_fast_corrected, diff_corr * fs, motor_now->p_alpha_speed_fast);
 		UTILS_NAN_ZERO(motor_now->m_speed_est_fast_corrected);
 
 		// pll wind-up protection
