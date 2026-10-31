@@ -26,6 +26,8 @@
 // Cutoff frequencies of the filters in the control loop
 #define VDQ_CUTOFF_HZ				500.0
 #define DUTY_CUTOFF_HZ				22.0
+#define V_BUS_CUTOFF_HZ				225.0
+#define MOD_Q_CUTOFF_HZ				500.0
 
 // See http://cas.ensmp.fr/~praly/Telechargement/Journaux/2010-IEEE_TPEL-Lee-Hong-Nam-Ortega-Praly-Astolfi.pdf
 void foc_observer_update(float v_alpha, float v_beta, float i_alpha, float i_beta,
@@ -804,4 +806,6 @@ void foc_precalc_values(motor_all_state_t *motor) {
 
 	motor->p_alpha_vdq = ema_alpha(VDQ_CUTOFF_HZ, motor->p_dt);
 	motor->p_alpha_duty = ema_alpha(DUTY_CUTOFF_HZ, motor->p_dt);
+	motor->p_alpha_v_bus = ema_alpha(V_BUS_CUTOFF_HZ, motor->p_dt);
+	motor->p_alpha_mod_q = ema_alpha(MOD_Q_CUTOFF_HZ, motor->p_dt);
 }
