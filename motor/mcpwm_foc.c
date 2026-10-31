@@ -27,6 +27,7 @@
 #include "hal.h"
 #include "stm32f4xx_conf.h"
 #include "digital_filter.h"
+#include "ema.h"
 #include "utils_math.h"
 #include "utils_sys.h"
 #include "ledpwm.h"
@@ -3789,8 +3790,8 @@ void mcpwm_foc_adc_int_handler(void *p, uint32_t flags) {
 		UTILS_NAN_ZERO(state_now->vd);
 		UTILS_NAN_ZERO(state_now->vq);
 
-		UTILS_LP_FAST(state_now->vd, vd_tmp, 0.2);
-		UTILS_LP_FAST(state_now->vq, vq_tmp, 0.2);
+		ema_step(&state_now->vd, vd_tmp, motor_now->p_alpha_vdq);
+		ema_step(&state_now->vq, vq_tmp, motor_now->p_alpha_vdq);
 
 		// Set the current controller integrator to the BEMF voltage to avoid
 		// a current spike when the motor is driven again. Notice that we have
