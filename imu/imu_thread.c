@@ -117,10 +117,14 @@ static void terminal_status(int argc, const char **argv) {
 	}
 }
 
+// The timed loop period, rounded down to whole ticks so the rate is at least the requested one.
+static systime_t loop_interval(uint16_t rate_hz) {
+	return MAX(CH_CFG_ST_FREQUENCY / rate_hz, 1);
+}
+
 void imu_thread_set_device(imu_device_t *dev, uint16_t rate_hz, drdy_t *drdy) {
 	m_dev = dev;
 	m_drdy = drdy;
-	m_dev->sample_rate_hz = rate_hz;
 	m_read_fails = 0;
 	m_frozen_streak = 0;
 
@@ -129,6 +133,9 @@ void imu_thread_set_device(imu_device_t *dev, uint16_t rate_hz, drdy_t *drdy) {
 	// Resolved here (before configure()) so the device's configure() can adapt its
 	// ODR/filter setup.
 	dev->use_drdy = drdy != NULL && dev->interface->enable_drdy_output != NULL;
+
+	// In DRDY mode this is the requested rate, which configure() replaces with the ODR it programs.
+	dev->sample_rate_hz = dev->use_drdy ? rate_hz : CH_CFG_ST_FREQUENCY / loop_interval(rate_hz);
 
 	if (!m_cmds_registered) {
 		terminal_register_command_callback(
@@ -185,8 +192,7 @@ static THD_FUNCTION(thread_func, arg) {
 	chRegSetThreadName("IMU");
 
 	const systime_t period = US2ST(1000000 / m_dev->sample_rate_hz);
-	// Rounded down to whole ticks, so the actual rate is at least the configured one.
-	const systime_t interval = MAX(CH_CFG_ST_FREQUENCY / m_dev->sample_rate_hz, 1);
+	const systime_t interval = loop_interval(m_dev->sample_rate_hz);
 
 	uint32_t last_ts = timer_time_now();
 	systime_t deadline = chVTGetSystemTimeX();
