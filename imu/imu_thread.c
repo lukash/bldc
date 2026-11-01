@@ -185,8 +185,8 @@ static THD_FUNCTION(thread_func, arg) {
 	chRegSetThreadName("IMU");
 
 	const systime_t period = US2ST(1000000 / m_dev->sample_rate_hz);
-	// One tick less so the actual rate is at least the configured one (US2ST rounds up).
-	const systime_t interval = period - 1;
+	// Rounded down to whole ticks, so the actual rate is at least the configured one.
+	const systime_t interval = MAX(CH_CFG_ST_FREQUENCY / m_dev->sample_rate_hz, 1);
 
 	uint32_t last_ts = timer_time_now();
 	systime_t deadline = chVTGetSystemTimeX();
