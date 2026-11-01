@@ -189,11 +189,10 @@ static THD_FUNCTION(thread_func, arg) {
 	const systime_t interval = period - 1;
 
 	uint32_t last_ts = timer_time_now();
+	systime_t deadline = chVTGetSystemTimeX();
 	bool first_sample = true;
 
 	while (!chThdShouldTerminateX()) {
-		systime_t start_time = chVTGetSystemTimeX();
-
 		bool drdy = false;
 		if (m_drdy_active) {
 			drdy = drdy_wait(m_drdy, DRDY_TIMEOUT_PERIODS * period);
@@ -244,12 +243,15 @@ static THD_FUNCTION(thread_func, arg) {
 
 		// In DRDY mode the next edge wakes the loop, we only sleep in timed mode
 		if (!m_drdy_active) {
-			systime_t sleep_ticks = 1;
-			systime_t remaining = start_time + interval - chVTGetSystemTimeX();
-			if (remaining > 0 && remaining <= interval) {
-				sleep_ticks = remaining;
+			systime_t now = chVTGetSystemTimeX();
+			deadline += interval;
+			systime_t remaining = deadline - now;
+			if (remaining == 0 || remaining > interval) {
+				// Too late for this deadline, restart the schedule
+				deadline = now + 1;
+				remaining = 1;
 			}
-			chThdSleep(sleep_ticks);
+			chThdSleep(remaining);
 		}
 	}
 }
